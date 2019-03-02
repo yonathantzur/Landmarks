@@ -14,7 +14,7 @@ session = tf.Session(config=config)
 image_size = (256, 256)
 
 main_dir = "/content/drive/My Drive/overfitting/"
-train_dir = "vgg1/"
+train_dir = "vgg-full/"
 
 train_data_dir = main_dir + "dataset/train/"
 validation_data_dir = main_dir + "dataset/validation/"
@@ -83,11 +83,11 @@ def print_time_log(train_time_in_minutes):
 
 
 def create_data_augmentations():
-    return ImageDataGenerator(rotation_range=30,
+    return ImageDataGenerator(rotation_range=15,
                               width_shift_range=0.1,
                               height_shift_range=0.1,
                               shear_range=0.01,
-                              zoom_range=[0.8, 1.25],
+                              zoom_range=[0.8, 1.2],
                               horizontal_flip=True,
                               vertical_flip=False,
                               fill_mode='reflect',
@@ -143,16 +143,11 @@ def train_model(model_name=None):
                                         include_top=False,
                                         input_shape=(image_size[0], image_size[1], 3))
 
-        for layer in base_model.layers[:17]:
-            layer.trainable = False
-
         class_count = 100
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
-        x = Dense(1024, activation='relu')(x)
-        x = Dense(1024, activation='relu')(x)
-        x = Dense(1024, activation='relu')(x)
-        x = Dense(512, activation='relu')(x)
+        x = Dense(4096, activation='relu')(x)
+        x = Dense(4096, activation='relu')(x)
         fully_connected = Dense(class_count, activation='softmax')(x)
         model_final = Model(inputs=base_model.input, outputs=fully_connected)
 

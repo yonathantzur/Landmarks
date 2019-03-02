@@ -15,7 +15,7 @@ session = tf.Session(config=config)
 image_size = (256, 256)
 
 main_dir = "/content/drive/My Drive/overfitting/"
-train_dir = "vgg-full-regularization/"
+train_dir = "simba/"
 
 train_data_dir = main_dir + "dataset/train/"
 validation_data_dir = main_dir + "dataset/validation/"
@@ -84,7 +84,7 @@ def print_time_log(train_time_in_minutes):
 
 
 def create_data_augmentations():
-    return ImageDataGenerator(rotation_range=15,
+    return ImageDataGenerator(rotation_range=30,
                               width_shift_range=0.1,
                               height_shift_range=0.1,
                               shear_range=0.01,
@@ -143,28 +143,32 @@ def train_model(model_name=None):
         input_shape = (256, 256, 3)
 
         model_final = Sequential([
-            # We created a Conv layer with 64 convolution filters and 3x3 window size, that recieve the image dimensions
-            Conv2D(32, (3, 3), input_shape=input_shape, padding='same', activation='relu'),
+            # We created a convolution layer with 32 filters and 3x3 window size.
+            Conv2D(32, (3, 3), input_shape=input_shape, activation='relu', padding='same'),
             Conv2D(32, (3, 3), activation='relu', padding='same'),
             MaxPooling2D(pool_size=(2, 2), strides=(2, 2)),
-            Conv2D(64, (3, 3), padding='same', activation='relu'),
             Conv2D(64, (3, 3), activation='relu', padding='same'),
+            Conv2D(64, (3, 3), activation='relu', padding='same'),
+			Conv2D(64, (3, 3), activation='relu', padding='same'),
             MaxPooling2D(pool_size=(2, 2), strides=(2, 2)),
             Conv2D(128, (3, 3), activation='relu', padding='same'),
-            Conv2D(128, (3, 3), activation='relu', padding='same', ),
+            Conv2D(128, (3, 3), activation='relu', padding='same'),
+			Conv2D(128, (3, 3), activation='relu', padding='same'),
             MaxPooling2D(pool_size=(2, 2), strides=(2, 2)),
-            Conv2D(256, (3, 3), activation='relu', padding='same', ),
-            Conv2D(256, (3, 3), activation='relu', padding='same', ),
-            Conv2D(256, (3, 3), activation='relu', padding='same', ),
+            Conv2D(256, (3, 3), activation='relu', padding='same'),
+            Conv2D(256, (3, 3), activation='relu', padding='same'),
+            Conv2D(256, (3, 3), activation='relu', padding='same'),			
             MaxPooling2D(pool_size=(2, 2), strides=(2, 2)),
-            Conv2D(512, (3, 3), activation='relu', padding='same', ),
-            Conv2D(512, (3, 3), activation='relu', padding='same', ),
-            Conv2D(512, (3, 3), activation='relu', padding='same', ),
+            Conv2D(512, (3, 3), activation='relu', padding='same'),
+            Conv2D(512, (3, 3), activation='relu', padding='same'),
+            Conv2D(512, (3, 3), activation='relu', padding='same'),			
             MaxPooling2D(pool_size=(2, 2), strides=(2, 2)),
-            Flatten(),
+			# Run global average pooling in order to get better results.
             GlobalAveragePooling2D(),
+            Flatten(),			
+			# We created fully connected layers.
             Dense(4096, activation='relu'),
-            Dense(4096, activation='relu'),
+            Dense(4096, activation='relu'),		
             Dense(100, activation='softmax')
         ])
 
@@ -173,7 +177,7 @@ def train_model(model_name=None):
 
     # Compile the final modal with loss and optimizer.
     model_final.compile(loss="categorical_crossentropy",
-                        optimizer=optimizers.SGD(lr=0.001, momentum=0.9),
+                        optimizer=optimizers.SGD(lr=0.0001, momentum=0.9),
                         metrics=["accuracy"])
 
     step_size_train = train_generator.n // train_generator.batch_size
@@ -181,7 +185,7 @@ def train_model(model_name=None):
     # Initializing monitoring params for training.
     history = LossAccHistory()
     early = EarlyStopping(monitor='val_acc', min_delta=0, patience=2, verbose=1, mode='auto')
-    network_file_name = main_dir + train_dir + "vgg16_{}.h5".format(int(time.time()))
+    network_file_name = main_dir + train_dir + "simba_{}.h5".format(int(time.time()))
     checkpoint = ModelCheckpoint(network_file_name, monitor='val_acc', verbose=1,
                                  save_best_only=True, save_weights_only=False, mode='auto', period=1)
 
