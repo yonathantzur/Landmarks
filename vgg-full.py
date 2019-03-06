@@ -7,6 +7,7 @@ from tensorflow.keras.models import Sequential, Model, load_model
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
 import matplotlib.pyplot as plt
 
+# Configure tensorflow to work with GPU
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
@@ -31,6 +32,7 @@ class LossAccHistory(Callback):
         self.accuracy.append(logs.get('acc'))
  
 
+# Print train and validation accuracy values during the epochs
 def print_acc(history):
     train_acc = history['acc']
     validation_acc = history['val_acc']
@@ -53,6 +55,7 @@ def print_acc(history):
     text_file.close()
 
 
+# Print train and validation loss values during the epochs
 def print_loss(history):
     train_loss = history['loss']
     validation_loss = history['val_loss']
@@ -75,13 +78,14 @@ def print_loss(history):
     text_file.close()
 
 
+# Print training running time
 def print_time_log(train_time_in_minutes):
     result = "Training time: " + str(train_time_in_minutes) + " minutes"
     text_file = open(main_dir + train_dir + "train_time.txt", "w")
     text_file.write(str(result))
     text_file.close()
 
-
+# Create data augmentation object
 def create_data_augmentations():
     return ImageDataGenerator(rotation_range=15,
                               width_shift_range=0.1,
@@ -95,10 +99,11 @@ def create_data_augmentations():
                               brightness_range=[0.8, 1.2])
 
 
+# Create data object with no augmentation.
 def create_data():
     return ImageDataGenerator()
 
-
+# Streaming all test images along the network at the end of the training
 def calculate_test_accuracy(model_obj):
     test_gen = create_data()
 
@@ -117,13 +122,14 @@ def calculate_test_accuracy(model_obj):
     text_file.write(str(result))
     text_file.close()
 
-
-def train_model(model_name=None):
+# The main function that define and train the network
+def train_model(model_name=None):	
     train_gen = create_data_augmentations()
     validation_gen = create_data()
 
     batch_size = 5
 
+	# Creating the test generator to work with data augmentation and sets its configuration
     train_generator = train_gen.flow_from_directory(train_data_dir,
                                                     target_size=image_size,
                                                     color_mode='rgb',
@@ -131,19 +137,24 @@ def train_model(model_name=None):
                                                     class_mode='categorical',
                                                     shuffle=True)
 
+	# Creating the validation generator to work with no data augmentation and sets its configuration
     validation_generator = validation_gen.flow_from_directory(validation_data_dir,
                                                               target_size=image_size,
                                                               color_mode='rgb',
                                                               class_mode="categorical")
 
+	# In case the function got model to load
     if model_name:
         model_final = load_model(model_name)
     else:
+		# Define base model of VGG16 CNN with initial weights of imagenet training, without the fully connected layers
         base_model = applications.VGG16(weights="imagenet",
                                         include_top=False,
                                         input_shape=(image_size[0], image_size[1], 3))
 
         class_count = 100
+		
+		# Define the fully connected layers at the end of the network
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
         x = Dense(4096, activation='relu')(x)
@@ -151,13 +162,15 @@ def train_model(model_name=None):
         fully_connected = Dense(class_count, activation='softmax')(x)
         model_final = Model(inputs=base_model.input, outputs=fully_connected)
 
-    # Compile the final modal with loss and optimizer.
+    # Compile the final modal with loss and optimizer
     model_final.compile(loss="categorical_crossentropy",
                         optimizer=optimizers.SGD(lr=0.0001, momentum=0.8),
                         metrics=["accuracy"])
 
+	# Print the network to console.
     model_final.summary()
 
+	# Define sum of steps per epoch, by divide the train images amount by the batch size
     step_size_train = train_generator.n // train_generator.batch_size
 
     # Initializing monitoring params for training.
