@@ -17,7 +17,7 @@ config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
 session = tf.Session(config=config)
 
-main_dir = ""
+main_dir = "/content/drive/My Drive/overfitting/"
 index_data_dir = main_dir + "dataset/index/"
 input_dir = main_dir + "input/"
 output_dir = main_dir + "output/"
@@ -108,4 +108,4 @@ def find_landmarks():
 
 
 if __name__ == '__main__':
-    create_knn_model()
+    find_landmarks()
